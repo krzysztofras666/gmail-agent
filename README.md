@@ -5,11 +5,11 @@ and a single `OPENAI_API_KEY`:
 
 - **`gmail_agent`** — drafts replies to your unread Gmail. Documented
   below.
-- **`travel_agent`** — lives in the separate [`travel-agent/`](travel-agent/)
-  folder. Scrapes Polish travel portals (esky, itaka, r.pl,
-  wakacyjnipiraci, …), extracts concrete offers with an LLM, and groups
-  the cheapest ones per destination ordered by departure date.
-  See [travel-agent/README.md](travel-agent/README.md).
+- **`travel_agent`** — lives in the sibling [`../travel-agent/`](../travel-agent/)
+  folder (separate project). Scrapes Polish travel portals (esky, itaka,
+  r.pl, wakacyjnipiraci, …), extracts concrete offers with an LLM, and
+  groups the cheapest ones per destination ordered by departure date.
+  See [../travel-agent/README.md](../travel-agent/README.md).
 
 ---
 
@@ -300,18 +300,18 @@ runs missed while the Mac was asleep — launchd will.
 
 # Travel deals agent
 
-The travel agent is a **separate project** in [`travel-agent/`](travel-agent/).
-Open that folder for setup, CLI usage, site coverage, email digest, and
-scheduled daily runs.
+The travel agent is a **separate project** in the sibling folder
+[`../travel-agent/`](../travel-agent/). Open that folder for setup, CLI
+usage, site coverage, email digest, and scheduled daily runs.
 
 ```bash
-cd travel-agent
+cd ../travel-agent
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python -m travel_agent list-sites
 ```
 
-Full docs: [travel-agent/README.md](travel-agent/README.md).
+Full docs: [../travel-agent/README.md](../travel-agent/README.md).
 
 # gmail-agent
