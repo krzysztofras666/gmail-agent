@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "travel-agent"
+version = "0.1.0"
+description = "Scrape Polish travel portals and surface the cheapest last-minute deals"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx[http2]>=0.27.0",
+    "openai>=1.30.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.7.0",
+    "playwright>=1.44.0",
+    "google-api-python-client>=2.130.0",
+    "google-auth-oauthlib>=1.2.0",
+]
+
+[project.scripts]
+travel-agent = "travel_agent.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["travel_agent*"]

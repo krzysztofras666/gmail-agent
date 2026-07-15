@@ -5,10 +5,11 @@ and a single `OPENAI_API_KEY`:
 
 - **`gmail_agent`** — drafts replies to your unread Gmail. Documented
   below.
-- **`travel_agent`** — scrapes Polish travel portals (esky, itaka,
-  r.pl, wakacyjnipiraci, …), extracts concrete offers with an LLM, and
-  groups the cheapest ones per destination ordered by departure date.
-  See [the travel agent section](#travel-deals-agent) at the bottom.
+- **`travel_agent`** — lives in the separate [`travel-agent/`](travel-agent/)
+  folder. Scrapes Polish travel portals (esky, itaka, r.pl,
+  wakacyjnipiraci, …), extracts concrete offers with an LLM, and groups
+  the cheapest ones per destination ordered by departure date.
+  See [travel-agent/README.md](travel-agent/README.md).
 
 ---
 
@@ -299,228 +300,18 @@ runs missed while the Mac was asleep — launchd will.
 
 # Travel deals agent
 
-`travel_agent` is a standalone CLI that scrapes a curated list of
-Polish travel portals, extracts concrete offers from the messy HTML
-using an LLM, deduplicates across sites, and prints the cheapest 1–N
-offers per destination ordered by departure date.
-
-## Configured sites
-
-| ID                | Site                       |
-| ----------------- | -------------------------- |
-| `esky`            | esky.pl                    |
-| `coraltravel`     | coraltravel.pl             |
-| `itaka`           | itaka.pl                   |
-| `fly`             | fly.pl                     |
-| `lastminute`      | pl.lastminute.com          |
-| `travelplanet`    | travelplanet.pl            |
-| `rpl`             | r.pl                       |
-| `wakacyjnipiraci` | wakacyjnipiraci.pl         |
-| `superlastminute` | super-last-minute.pl       |
-| `kanalwyjazdowy`  | kanalwyjazdowy.pl          |
-
-`python -m travel_agent list-sites` prints this list, plus the exact
-listing URLs each site falls back to in order.
-
-## First-time setup
+The travel agent is a **separate project** in [`travel-agent/`](travel-agent/).
+Open that folder for setup, CLI usage, site coverage, email digest, and
+scheduled daily runs.
 
 ```bash
-pip install -r requirements.txt        # picks up playwright too
-playwright install chromium            # ~100 MB browser, one-time
+cd travel-agent
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python -m travel_agent list-sites
 ```
 
-The `playwright install` step is only needed if you want the headless-
-Chromium fallback (recommended — it's what unlocks the JS-rendered and
-anti-bot-protected sites). The agent runs fine without it and will
-just skip the fallback, printing a one-line hint.
-
-## Run
-
-```bash
-source .venv/bin/activate
-python -m travel_agent run                       # all sites, auto-fallback
-python -m travel_agent run --site itaka --site rpl   # subset
-python -m travel_agent run --json > deals.json   # machine-readable
-python -m travel_agent run --max-per-destination 1   # one best deal per place
-python -m travel_agent run --no-diagnostics      # hide per-site status
-
-# Fetcher engine knobs:
-python -m travel_agent run --no-browser     # httpx only, fastest, may miss some sites
-python -m travel_agent run --browser-all    # every site through real Chromium
-```
-
-Output is a single table grouped by destination, sorted by departure
-date, with the cheapest offers per destination:
-
-```
-Destination          Dates                       Price        Source
-Tunezja, Mahdia      2026-05-28 → 2026-06-04     2 199 PLN    travelplanet.pl
-Egipt, Hurghada      2026-06-06 → 2026-06-14     2 499 PLN    itaka.pl
-Grecja, Kreta        2026-09-01 → 2026-09-08     2 899 PLN    r.pl
-```
-
-A second diagnostics table shows what each source returned (chars
-fetched, offers extracted, any errors).
-
-## How it works
-
-1. **Fetch (httpx)** — all sites concurrently with `httpx`, realistic
-   browser headers (Polish `Accept-Language`, desktop Chrome UA,
-   gzip+brotli decoding). For each site we try a `/last-minute` or
-   `/promocje` subpage first and fall back to the homepage.
-2. **Fetch (browser fallback)** — for any site whose httpx response
-   came back too short, with a 4xx/5xx, or looking like an anti-bot
-   interstitial ("Pardon Our Interruption", "Access Denied", etc.),
-   the agent retries through a single headless Chromium running
-   Playwright. The browser dismisses Polish cookie banners
-   (Didomi/OneTrust/etc.), then waits for either the page body to
-   render past 600 chars *or* the network to go idle, whichever fires
-   first. One browser process is shared across all fallback fetches
-   so the cost is paid only once per run.
-3. **Clean** — strip `<script>`/`<style>`/`<nav>`/etc., collapse
-   whitespace, clip to ~18k chars. RSS feeds (wakacyjnipiraci,
-   kanalwyjazdowy) are flattened without the heavy DOM stripping.
-4. **Extract** — feed the cleaned text per-site to the LLM with a
-   strict JSON schema (destination, departure/return date, price,
-   currency, nights, title, notes). The model is told to skip
-   marketing banners and never invent missing dates or prices.
-5. **Aggregate** — deduplicate across sites (same destination + dates +
-   rounded price), keep the cheapest N per destination, then sort
-   destinations by earliest departure date.
-6. **Render** — pretty table via `rich` (or JSON with `--json`). The
-   per-site diagnostics row shows which fetcher engine (`http` or
-   `browser`) actually produced the text.
-
-## Configuration
-
-All settings come from environment variables / `.env` (loaded
-automatically). Travel-specific knobs are optional:
-
-| Variable                       | Default          | Purpose                                                                 |
-| ------------------------------ | ---------------- | ----------------------------------------------------------------------- |
-| `OPENAI_API_KEY`               | —                | Required. Shared with `gmail_agent`.                                    |
-| `TRAVEL_OPENAI_MODEL`          | `OPENAI_MODEL` or `gpt-4o-mini` | Cheap and accurate enough for HTML→JSON extraction.        |
-| `TRAVEL_HTTP_TIMEOUT`          | `20`             | Per-request HTTP timeout, seconds.                                      |
-| `TRAVEL_FETCH_CONCURRENCY`     | `6`              | Max simultaneous HTTP requests.                                         |
-| `TRAVEL_MAX_TEXT_CHARS`        | `18000`          | Per-site cap on cleaned text sent to the LLM.                           |
-| `TRAVEL_MAX_OFFERS_PER_DEST`   | `3`              | How many offers per destination to keep (cheapest wins).                |
-| `TRAVEL_USER_AGENT`            | a desktop Chrome UA | Override if you need to test from a specific browser fingerprint.    |
-| `TRAVEL_BROWSER_RETRY_MIN_CHARS` | `2000`         | Httpx responses shorter than this trigger a browser retry (`auto` mode). |
-
-## Site coverage
-
-With `playwright install chromium` done, 9 of 10 sites return real
-offer data:
-
-| Site | Engine | Notes |
-| --- | --- | --- |
-| itaka.pl | http | Server-renders 12k+ chars of offers in HTML. |
-| r.pl | http | Server-renders offer cards. |
-| travelplanet.pl | http | Server-renders. |
-| super-last-minute.pl | http | Server-renders. |
-| wakacyjnipiraci.pl | http | RSS feed (`/feed`). |
-| kanalwyjazdowy.pl | http | RSS feed (`/feed/`). |
-| esky.pl | browser | Auto-falls-back; httpx gets a 403, browser sees the full last-minute grid. |
-| fly.pl | browser | Auto-falls-back; offer cards are JS-rendered. |
-| pl.lastminute.com | browser | Auto-falls-back to `/deals`, which shows real package deals. |
-| **coraltravel.pl** | **blocked** | Protected by Imperva Incapsula (returns `403` + JS challenge even to a real browser). Bypassing this needs `playwright-stealth` plus possibly a residential proxy — out of scope here. |
-
-### Why `--browser-all` exists
-
-`auto` is the right default. Use `--browser-all` only when you suspect
-a normally-http-served site has changed its template — fetching every
-site through Chromium gives the most permissive view of what's there,
-at the cost of ~3–6s per site.
-
-### Why `--no-browser` exists
-
-Use `--no-browser` for the fastest possible run (typically <5s total)
-when you don't care about the four JS-heavy / anti-bot sites and
-just want the RSS+SSR sources.
-
-## Email the digest
-
-The agent can render the result as a Gmail-friendly HTML digest and
-send it to a list of recipients. It uses the OAuth token created by
-`python -m gmail_agent auth` — no new credentials needed.
-
-```bash
-# scrape + email to the configured recipients
-python -m travel_agent send
-
-# preview the email without sending it (writes logs/last_email.html)
-python -m travel_agent send --dry-run
-
-# override recipients ad-hoc (repeatable, or comma-separated)
-python -m travel_agent send --to me@example.com --to friend@example.com
-
-# render the HTML to disk only (no Gmail API call at all)
-python -m travel_agent preview-email --out /tmp/preview.html
-```
-
-### Defaults
-
-| What | Default | How to override |
-| --- | --- | --- |
-| Sender (`From`) | `andalath@gmail.com` | `--from <email>` or `TRAVEL_EMAIL_FROM` env var. Must already be authenticated via `python -m gmail_agent auth`. |
-| Recipients (`To`) | `andalath@gmail.com, goniaras@gmail.com, katarzyna.dyngosz@gmail.com` | `--to` (repeatable) or `TRAVEL_EMAIL_TO` env var (comma-separated). |
-| Subject | `Tanie wakacje — YYYY-MM-DD (N kierunków, M ofert)` | Not configurable from CLI; edit `render_html.py` if needed. |
-
-The body is multipart/alternative — Gmail clients see the HTML, plain
-text clients see the readable plain-text fallback. The HTML uses only
-inline CSS (no external stylesheets, no remote images) so it renders
-identically in Gmail desktop, Gmail mobile, and Outlook.
-
-> Note: this is the **only** place in this repo that calls a Gmail
-> `send` endpoint. `gmail_agent` deliberately creates drafts only.
-> The travel digest sends because you've explicitly opted into a
-> scheduled outbound email.
-
-## Scheduled daily run (08:30)
-
-A second launchd job ships in this repo, running 15 minutes after the
-gmail_agent's daily draft pass:
-
-```bash
-./scripts/install_travel_schedule.sh
-```
-
-This installs `~/Library/LaunchAgents/com.travel-agent.daily.plist`
-which fires `scripts/run_travel_daily.sh` every day at **08:30 local
-time**. If the Mac was asleep at 08:30, launchd runs the job at the
-next wake (just like the gmail_agent job).
-
-### Test it once now (without waiting for 08:30)
-
-```bash
-launchctl kickstart gui/$(id -u)/com.travel-agent.daily
-# or run the wrapper directly:
-./scripts/run_travel_daily.sh                # real run, sends mail
-./scripts/run_travel_daily.sh --dry-run      # safe smoke test, no send
-```
-
-### Logs
-
-```
-logs/travel_run.log              # per-run output (rotated at ~5 MB)
-logs/travel.launchd.out.log      # launchd-captured stdout
-logs/travel.launchd.err.log      # launchd-captured stderr
-logs/last_email.html             # most recent rendered email (overwritten)
-```
-
-`tail -f logs/travel_run.log` to watch a run live; open
-`logs/last_email.html` in any browser to see exactly what was sent.
-
-### Change the schedule
-
-Edit `scripts/com.travel-agent.daily.plist` → `StartCalendarInterval`
-→ change `Hour` / `Minute`, then re-run
-`./scripts/install_travel_schedule.sh`.
-
-### Uninstall
-
-```bash
-./scripts/uninstall_travel_schedule.sh
-```
+Full docs: [travel-agent/README.md](travel-agent/README.md).
 
 # gmail-agent
