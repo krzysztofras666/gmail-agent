@@ -5,11 +5,11 @@ and a single `OPENAI_API_KEY`:
 
 - **`gmail_agent`** — drafts replies to your unread Gmail. Documented
   below.
-- **`travel_agent`** — lives in the sibling [`../travel-agent/`](../travel-agent/)
-  folder (separate project). Scrapes Polish travel portals (esky, itaka,
-  r.pl, wakacyjnipiraci, …), extracts concrete offers with an LLM, and
-  groups the cheapest ones per destination ordered by departure date.
-  See [../travel-agent/README.md](../travel-agent/README.md).
+- **`travel_agent`** — separate repo:
+  [krzysztofras666/travel-agent](https://github.com/krzysztofras666/travel-agent)
+  (sibling folder `../travel-agent/` locally). Scrapes Polish travel portals
+  (esky, itaka, r.pl, wakacyjnipiraci, …), extracts concrete offers with an LLM,
+  and groups the cheapest ones per destination ordered by departure date.
 
 ---
 
@@ -300,9 +300,10 @@ runs missed while the Mac was asleep — launchd will.
 
 # Travel deals agent
 
-The travel agent is a **separate project** in the sibling folder
-[`../travel-agent/`](../travel-agent/). Open that folder for setup, CLI
-usage, site coverage, email digest, and scheduled daily runs.
+The travel agent is a **separate project**:
+[github.com/krzysztofras666/travel-agent](https://github.com/krzysztofras666/travel-agent)
+
+Locally it lives in the sibling folder `../travel-agent/`.
 
 ```bash
 cd ../travel-agent
@@ -312,6 +313,6 @@ cp .env.example .env
 python -m travel_agent list-sites
 ```
 
-Full docs: [../travel-agent/README.md](../travel-agent/README.md).
+Full docs: [travel-agent README](https://github.com/krzysztofras666/travel-agent/blob/main/README.md).
 
 # gmail-agent
