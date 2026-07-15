@@ -2,8 +2,10 @@
 
 Standalone CLI that scrapes Polish travel portals, extracts concrete offers with an LLM, deduplicates across sites, and prints the cheapest deals per destination ordered by departure date.
 
-This is a **separate project** from [gmail-agent](https://github.com/krzysztofras666/gmail-agent)
-in the sibling `../gmail-agent/` folder. It can share the same
+This is a **separate project** from [gmail-agent](https://github.com/krzysztofras666/gmail-agent).
+Repo: **https://github.com/krzysztofras666/travel-agent**
+
+It lives in a sibling `../gmail-agent/` folder locally and can share the same
 `OPENAI_API_KEY` and Gmail OAuth tokens for the daily email digest.
 
 ## Quick start
