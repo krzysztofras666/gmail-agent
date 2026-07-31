@@ -9,6 +9,10 @@ and a single `OPENAI_API_KEY`:
   r.pl, wakacyjnipiraci, …), extracts concrete offers with an LLM, and
   groups the cheapest ones per destination ordered by departure date.
   See [the travel agent section](#travel-deals-agent) at the bottom.
+  Repo: **https://github.com/krzysztofras666/travel-agent**
+- **`tech_news_agent`** — fetches tech headlines from RSS/API sources and
+  emails a daily digest.
+  Repo: **https://github.com/krzysztofras666/tech-news-agent**
 
 ---
 
