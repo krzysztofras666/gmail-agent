@@ -1,3 +1,15 @@
+# Agents
+
+This repo hosts CLI agents that share a single `.venv`, `OPENAI_API_KEY`, and
+Gmail OAuth tokens (from [gmail-agent](https://github.com/krzysztofras666/gmail-agent)):
+
+- **`travel_agent`** — scrapes Polish travel portals and emails the cheapest deals.
+  Repo: **https://github.com/krzysztofras666/travel-agent**
+- **`tech_news_agent`** — fetches tech headlines from RSS/API sources and emails a daily digest.
+  Repo: **https://github.com/krzysztofras666/tech-news-agent**
+
+---
+
 # Travel Agent
 
 Standalone CLI that scrapes Polish travel portals, extracts concrete offers with an LLM, deduplicates across sites, and prints the cheapest deals per destination ordered by departure date.
@@ -86,3 +98,33 @@ python -m gmail_agent auth
 ```
 
 No new Google credentials are needed in this project if tokens already exist under `GMAIL_TOKEN_DIR`.
+
+---
+
+# Tech News Agent
+
+`tech_news_agent` is a **separate project** from this repo.
+
+Repo: **https://github.com/krzysztofras666/tech-news-agent**
+
+It lives in a sibling `../tech-news-agent/` folder locally and can share the same
+`OPENAI_API_KEY` and Gmail OAuth tokens for the daily email digest.
+
+```bash
+cd /path/to/tech-news-agent   # sibling of gmail-agent
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # add OPENAI_API_KEY
+python -m tech_news_agent list-sources
+python -m tech_news_agent run --source hn
+python -m tech_news_agent send --dry-run
+```
+
+To publish the standalone repo to GitHub (first time only):
+
+```bash
+./scripts/publish_to_github.sh
+```
+
+Full docs: see the [tech-news-agent README](https://github.com/krzysztofras666/tech-news-agent).
