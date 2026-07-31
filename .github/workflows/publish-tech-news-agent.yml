@@ -1,0 +1,34 @@
+name: Publish tech-news-agent
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tech-news-agent-main
+
+      - name: Publish standalone repository
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::Add a GH_PAT repository secret (classic PAT with repo scope), then re-run this workflow."
+            exit 1
+          fi
+          echo "${GH_TOKEN}" | gh auth login --with-token
+          if ! gh repo view krzysztofras666/tech-news-agent >/dev/null 2>&1; then
+            gh repo create krzysztofras666/tech-news-agent \
+              --public \
+              --description "Fetch tech headlines from RSS/API sources and email a daily digest"
+          fi
+          git remote add publish "https://x-access-token:${GH_TOKEN}@github.com/krzysztofras666/tech-news-agent.git" 2>/dev/null || \
+            git remote set-url publish "https://x-access-token:${GH_TOKEN}@github.com/krzysztofras666/tech-news-agent.git"
+          git push publish HEAD:main --force
