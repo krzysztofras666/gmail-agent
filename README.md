@@ -1,15 +1,3 @@
-# Agents
-
-This repo hosts CLI agents that share a single `.venv`, `OPENAI_API_KEY`, and
-Gmail OAuth tokens (from [gmail-agent](https://github.com/krzysztofras666/gmail-agent)):
-
-- **`travel_agent`** — scrapes Polish travel portals and emails the cheapest deals.
-  Repo: **https://github.com/krzysztofras666/travel-agent**
-- **`tech_news_agent`** — fetches tech headlines from RSS/API sources and emails a daily digest.
-  Repo: **https://github.com/krzysztofras666/tech-news-agent**
-
----
-
 # Travel Agent
 
 Standalone CLI that scrapes Polish travel portals, extracts concrete offers with an LLM, deduplicates across sites, and prints the cheapest deals per destination ordered by departure date.
@@ -17,21 +5,29 @@ Standalone CLI that scrapes Polish travel portals, extracts concrete offers with
 This is a **separate project** from [gmail-agent](https://github.com/krzysztofras666/gmail-agent).
 Repo: **https://github.com/krzysztofras666/travel-agent**
 
+The canonical repository may also include other tools (for example `wizzair/` on `main`).
+This `travel-agent-main` branch in gmail-agent is a **travel_agent-only export** used for publishing.
+
 It lives in a sibling `../gmail-agent/` folder locally and can share the same
 `OPENAI_API_KEY` and Gmail OAuth tokens for the daily email digest.
 
-## Quick start
+## Quick start (macOS)
 
 ```bash
-cd /path/to/travel-agent   # sibling of gmail-agent
+cd ~/travel-agent
 python3 -m venv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
-playwright install chromium   # optional but recommended
+playwright install chromium
 cp .env.example .env          # add OPENAI_API_KEY
-python -m travel_agent list-sites
-python -m travel_agent run --site itaka --max-per-destination 1
+.venv/bin/python -m travel_agent list-sites
+.venv/bin/python -m travel_agent run --max-per-destination 1
 ```
+
+If `python -m travel_agent` fails with `No module named 'google.auth'`, you are
+using system Python instead of the venv. Always run `.venv/bin/python -m travel_agent …`
+or `source .venv/bin/activate` first.
 
 ## Commands
 
@@ -47,6 +43,43 @@ python -m travel_agent run --browser-all
 python -m travel_agent send --dry-run
 python -m travel_agent preview-email --out /tmp/preview.html
 ```
+
+## Daily email digest (08:00)
+
+The digest is a styled HTML email with a clickable link for **every offer**
+(destination title + “Zobacz ofertę” button). Default recipients:
+
+- `andalath@gmail.com`
+- `katarzyna.dyngosz@gmail.com`
+- `goniaras@gmail.com`
+
+### One-time Gmail setup
+
+```bash
+cd ~/gmail-agent
+source .venv/bin/activate
+python -m gmail_agent auth --account andalath@gmail.com
+```
+
+### Send once manually
+
+```bash
+cd ~/travel-agent
+source .venv/bin/activate
+python -m travel_agent send
+python -m travel_agent preview-email --out logs/last_email.html
+```
+
+### Schedule every day at 08:00 (macOS launchd)
+
+```bash
+cd ~/travel-agent
+./scripts/install_travel_schedule.sh
+./scripts/run_travel_daily.sh --dry-run
+launchctl kickstart gui/$(id -u)/com.travel-agent.daily
+```
+
+Logs: `logs/travel_run.log`, `logs/last_email.html`
 
 ## Configuration
 
@@ -80,13 +113,18 @@ Environment variables (`.env` supported):
 └── .env.example
 ```
 
-## Scheduled daily run (macOS)
+## Publish to GitHub
+
+From a checkout of this branch (or from gmail-agent `main` via
+`scripts/publish_travel_to_github.sh`):
 
 ```bash
-./scripts/install_travel_schedule.sh
-./scripts/run_travel_daily.sh --dry-run
-launchctl kickstart gui/$(id -u)/com.travel-agent.daily
+./scripts/publish_to_github.sh
 ```
+
+Requires `gh auth login` as the repo owner. **Warning:** this force-pushes `main`
+on `krzysztofras666/travel-agent` and will overwrite anything not in this export
+(for example the `wizzair/` tree on the live repo).
 
 ## Gmail integration
 
@@ -98,33 +136,3 @@ python -m gmail_agent auth
 ```
 
 No new Google credentials are needed in this project if tokens already exist under `GMAIL_TOKEN_DIR`.
-
----
-
-# Tech News Agent
-
-`tech_news_agent` is a **separate project** from this repo.
-
-Repo: **https://github.com/krzysztofras666/tech-news-agent**
-
-It lives in a sibling `../tech-news-agent/` folder locally and can share the same
-`OPENAI_API_KEY` and Gmail OAuth tokens for the daily email digest.
-
-```bash
-cd /path/to/tech-news-agent   # sibling of gmail-agent
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env          # add OPENAI_API_KEY
-python -m tech_news_agent list-sources
-python -m tech_news_agent run --source hn
-python -m tech_news_agent send --dry-run
-```
-
-To publish the standalone repo to GitHub (first time only):
-
-```bash
-./scripts/publish_to_github.sh
-```
-
-Full docs: see the [tech-news-agent README](https://github.com/krzysztofras666/tech-news-agent).

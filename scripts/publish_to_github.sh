@@ -34,8 +34,9 @@ create_repo() {
 
 if repo_exists; then
   echo "Repository exists: https://github.com/${REPO}"
+  echo "WARNING: force-pushing main will overwrite extra projects on travel-agent (e.g. wizzair/)."
   ensure_remote
-  git push -u origin main
+  git push -u origin main --force
   echo "Published to https://github.com/${REPO}"
   exit 0
 fi
