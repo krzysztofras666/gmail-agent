@@ -1,0 +1,33 @@
+name: Publish travel-agent
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: travel-agent-main
+
+      - name: Publish standalone repository
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::Add a GH_PAT repository secret (classic PAT with repo scope), then re-run this workflow."
+            exit 1
+          fi
+          echo "${GH_TOKEN}" | gh auth login --with-token
+          if ! gh repo view krzysztofras666/travel-agent >/dev/null 2>&1; then
+            echo "::error::Repository krzysztofras666/travel-agent does not exist."
+            exit 1
+          fi
+          git remote add publish "https://x-access-token:${GH_TOKEN}@github.com/krzysztofras666/travel-agent.git" 2>/dev/null || \
+            git remote set-url publish "https://x-access-token:${GH_TOKEN}@github.com/krzysztofras666/travel-agent.git"
+          git push publish HEAD:main --force
