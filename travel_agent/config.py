@@ -26,15 +26,24 @@ class Settings:
     email_from: str
     email_to: list[str]
     gmail_token_dir: str
+    agent_enabled: bool
+    email_enabled: bool
 
 
 def _split_emails(value: str) -> list[str]:
     return [part.strip() for part in value.split(",") if part.strip()]
 
 
+def _env_bool(name: str, default: bool = True) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 def get_settings() -> Settings:
     base_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    default_to = "andalath@gmail.com, goniaras@gmail.com, katarzyna.dyngosz@gmail.com"
+    default_to = "andalath@gmail.com, katarzyna.dyngosz@gmail.com, goniaras@gmail.com"
     api_key = os.getenv("OPENAI_API_KEY", "")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is required. Set it in .env or the environment.")
@@ -53,4 +62,6 @@ def get_settings() -> Settings:
         gmail_token_dir=os.path.expanduser(
             os.getenv("GMAIL_TOKEN_DIR", "~/.config/gmail-agent")
         ),
+        agent_enabled=_env_bool("TRAVEL_AGENT_ENABLED", True),
+        email_enabled=_env_bool("TRAVEL_EMAIL_ENABLED", True),
     )
