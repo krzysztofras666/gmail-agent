@@ -13,6 +13,24 @@ from travel_agent.sites import Site
 FetchMode = Literal["auto", "http", "browser"]
 
 
+def _http_client(*, headers: dict[str, str], timeout: httpx.Timeout) -> httpx.AsyncClient:
+    try:
+        import h2  # noqa: F401
+    except ImportError:
+        return httpx.AsyncClient(
+            headers=headers,
+            timeout=timeout,
+            follow_redirects=True,
+            http2=False,
+        )
+    return httpx.AsyncClient(
+        headers=headers,
+        timeout=timeout,
+        follow_redirects=True,
+        http2=True,
+    )
+
+
 async def fetch_site(
     settings: Settings,
     site: Site,
@@ -51,12 +69,7 @@ async def _fetch_with_http(settings: Settings, site: Site) -> FetchResult:
     }
     timeout = httpx.Timeout(settings.http_timeout)
     last_error = ""
-    async with httpx.AsyncClient(
-        headers=headers,
-        timeout=timeout,
-        follow_redirects=True,
-        http2=True,
-    ) as client:
+    async with _http_client(headers=headers, timeout=timeout) as client:
         for url in site.urls:
             try:
                 response = await client.get(url)

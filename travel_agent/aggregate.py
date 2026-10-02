@@ -1,6 +1,28 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 from travel_agent.models import TravelOffer
+
+
+def min_departure_date(*, days_ahead: int = 1) -> date:
+    return date.today() + timedelta(days=days_ahead)
+
+
+def parse_departure_date(value: str) -> date | None:
+    value = value.strip()
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value[:10])
+    except ValueError:
+        return None
+
+
+def is_future_departure(offer: TravelOffer, minimum: date | None = None) -> bool:
+    cutoff = minimum or min_departure_date()
+    parsed = parse_departure_date(offer.departure_date)
+    return parsed is not None and parsed >= cutoff
 
 
 def _offer_key(offer: TravelOffer) -> tuple[str, str, str, int]:
@@ -16,7 +38,11 @@ def aggregate_offers(
     offers: list[TravelOffer],
     *,
     max_per_destination: int,
+    min_departure: date | None = None,
 ) -> list[TravelOffer]:
+    cutoff = min_departure or min_departure_date()
+    offers = [offer for offer in offers if is_future_departure(offer, cutoff)]
+
     deduped: dict[tuple[str, str, str, int], TravelOffer] = {}
     for offer in offers:
         key = _offer_key(offer)

@@ -33,7 +33,10 @@ EXTRACTION_SCHEMA = {
                     "return_date",
                     "price",
                     "currency",
+                    "nights",
                     "title",
+                    "notes",
+                    "url",
                 ],
                 "additionalProperties": False,
             },
@@ -48,7 +51,9 @@ Return only valid JSON matching the schema.
 Rules:
 - Skip banners, navigation, and generic marketing copy.
 - Never invent dates or prices that are not present in the text.
+- Only include offers whose departure date is tomorrow or later; skip past departures.
 - Use ISO dates (YYYY-MM-DD) when possible.
+- url must be a full https:// link copied from the source when a direct offer URL exists; otherwise use an empty string.
 - destination should be "Country, City/Region" when both are known.
 - currency should be a 3-letter code (usually PLN).
 - If no real offers are present, return {"offers": []}.
@@ -92,8 +97,11 @@ def extract_offers(
     return [_to_offer(item, site) for item in payload.get("offers", [])]
 
 
+from travel_agent.urls import resolve_offer_url
+
+
 def _to_offer(item: dict[str, Any], site: Site) -> TravelOffer:
-    return TravelOffer(
+    offer = TravelOffer(
         destination=item["destination"].strip(),
         departure_date=item["departure_date"].strip(),
         return_date=item.get("return_date", "").strip(),
@@ -105,4 +113,17 @@ def _to_offer(item: dict[str, Any], site: Site) -> TravelOffer:
         source=site.name,
         source_id=site.id,
         url=item.get("url", "").strip(),
+    )
+    return TravelOffer(
+        destination=offer.destination,
+        departure_date=offer.departure_date,
+        return_date=offer.return_date,
+        price=offer.price,
+        currency=offer.currency,
+        nights=offer.nights,
+        title=offer.title,
+        notes=offer.notes,
+        source=offer.source,
+        source_id=offer.source_id,
+        url=resolve_offer_url(offer),
     )

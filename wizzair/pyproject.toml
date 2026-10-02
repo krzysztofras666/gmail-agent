@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wizzair"
+version = "0.1.0"
+description = "Search Wizz Multipass All You Can Fly availability"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx[http2]>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.7.0",
+    "playwright>=1.44.0",
+    "google-api-python-client>=2.130.0",
+    "google-auth-oauthlib>=1.2.0",
+]
+
+[project.scripts]
+wizzair = "wizzair.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wizzair*"]

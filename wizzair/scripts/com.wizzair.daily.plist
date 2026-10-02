@@ -3,24 +3,26 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.travel-agent.daily</string>
+  <string>com.wizzair.daily</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>__PROJECT_ROOT__/scripts/run_travel_daily.sh</string>
+    <string>__PROJECT_ROOT__/scripts/run_wizzair_morning.sh</string>
   </array>
   <key>WorkingDirectory</key>
   <string>__PROJECT_ROOT__</string>
   <key>StartCalendarInterval</key>
-  <dict>
-    <key>Hour</key>
-    <integer>8</integer>
-    <key>Minute</key>
-    <integer>0</integer>
-  </dict>
+  <array>
+    <dict>
+      <key>Hour</key>
+      <integer>8</integer>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+  </array>
   <key>StandardOutPath</key>
-  <string>__PROJECT_ROOT__/logs/travel.launchd.out.log</string>
+  <string>__PROJECT_ROOT__/logs/wizzair.launchd.out.log</string>
   <key>StandardErrorPath</key>
-  <string>__PROJECT_ROOT__/logs/travel.launchd.err.log</string>
+  <string>__PROJECT_ROOT__/logs/wizzair.launchd.err.log</string>
 </dict>
 </plist>

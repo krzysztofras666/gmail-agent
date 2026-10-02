@@ -5,8 +5,7 @@ Standalone CLI that scrapes Polish travel portals, extracts concrete offers with
 This is a **separate project** from [gmail-agent](https://github.com/krzysztofras666/gmail-agent).
 Repo: **https://github.com/krzysztofras666/travel-agent**
 
-The canonical repository may also include other tools (for example `wizzair/` on `main`).
-This `travel-agent-main` branch in gmail-agent is a **travel_agent-only export** used for publishing.
+See also **[wizzair/](wizzair/)** — a sibling CLI for searching Wizz Air flights.
 
 It lives in a sibling `../gmail-agent/` folder locally and can share the same
 `OPENAI_API_KEY` and Gmail OAuth tokens for the daily email digest.
@@ -83,16 +82,16 @@ Logs: `logs/travel_run.log`, `logs/last_email.html`
 
 ### Stop scheduled emails (disable agent)
 
-On your Mac, from the travel-agent repo root (full repo with `wizzair/` on `main`):
+On your Mac, from the travel-agent repo root:
 
 ```bash
 ./scripts/disable_agent.sh
 ```
 
-This removes launchd jobs for travel (08:00) and wizzair (08:00 / 13:00 when present), and sets
-`TRAVEL_AGENT_ENABLED=0` and `TRAVEL_EMAIL_ENABLED=0` in `.env` (plus wizzair flags in `wizzair/.env`
-when that directory exists). Manual `send` commands refuse to email until you run
-`./scripts/enable_agent.sh` and reinstall schedules.
+This removes launchd jobs for travel (08:00) and wizzair (08:00 / 13:00), and sets
+`TRAVEL_AGENT_ENABLED=0`, `TRAVEL_EMAIL_ENABLED=0`, `WIZZAIR_AGENT_ENABLED=0`, and
+`WIZZAIR_EMAIL_ENABLED=0` in `.env` and `wizzair/.env`. Manual `send` commands refuse
+to email until you run `./scripts/enable_agent.sh` and reinstall schedules.
 
 ## Configuration
 
@@ -128,18 +127,13 @@ Environment variables (`.env` supported):
 └── .env.example
 ```
 
-## Publish to GitHub
-
-From a checkout of this branch (or from gmail-agent `main` via
-`scripts/publish_travel_to_github.sh`):
+## Scheduled daily run (macOS)
 
 ```bash
-./scripts/publish_to_github.sh
+./scripts/install_travel_schedule.sh
+./scripts/run_travel_daily.sh --dry-run
+launchctl kickstart gui/$(id -u)/com.travel-agent.daily
 ```
-
-Requires `gh auth login` as the repo owner. **Warning:** this force-pushes `main`
-on `krzysztofras666/travel-agent` and will overwrite anything not in this export
-(for example the `wizzair/` tree on the live repo).
 
 ## Gmail integration
 
