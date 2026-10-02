@@ -6,13 +6,12 @@ set -euo pipefail
 #
 # Requires: gh auth login (as krzysztofras666) or GH_PAT with repo scope.
 #
-# Note: the travel-agent repo may contain additional projects (e.g. wizzair).
-# This script force-pushes the travel_agent-only export branch. Only run it if
-# you intend to replace main with that snapshot.
+# Pushes the full travel-agent snapshot (travel_agent + wizzair) from the
+# travel-agent-live branch in this repo.
 
 REPO="krzysztofras666/travel-agent"
 REPO_URL="https://github.com/${REPO}.git"
-SOURCE_BRANCH="travel-agent-main"
+SOURCE_BRANCH="travel-agent-live"
 WORKDIR="${1:-/tmp/travel-agent-publish}"
 
 repo_exists() {

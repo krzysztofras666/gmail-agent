@@ -11,6 +11,27 @@ and a single `OPENAI_API_KEY`:
   emails a daily digest.
   Repo: **https://github.com/krzysztofras666/tech-news-agent**
 
+### Stop all scheduled agent emails (macOS)
+
+From this repo after `git pull`, run once on your Mac:
+
+```bash
+./scripts/disable_all_email_agents_on_mac.sh
+```
+
+That removes launchd jobs for travel, wizzair, tech news, and gmail-agent (if installed),
+runs each project’s `disable_agent.sh` when present, and sets `*_ENABLED=0` in `.env` files.
+Override clone paths with `TRAVEL_AGENT_DIR` or `TECH_NEWS_AGENT_DIR` if needed.
+
+To publish the latest travel-agent code (including disable scripts) to GitHub:
+
+```bash
+./scripts/publish_travel_to_github.sh
+```
+
+Requires `gh auth login` as yourself or a `GH_PAT` with `repo` scope. Or run the
+**Publish travel-agent** GitHub Action (needs `GH_PAT` repository secret).
+
 ---
 
 # Gmail Agent
