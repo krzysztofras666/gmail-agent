@@ -81,6 +81,19 @@ launchctl kickstart gui/$(id -u)/com.travel-agent.daily
 
 Logs: `logs/travel_run.log`, `logs/last_email.html`
 
+### Stop scheduled emails (disable agent)
+
+On your Mac, from the travel-agent repo root (full repo with `wizzair/` on `main`):
+
+```bash
+./scripts/disable_agent.sh
+```
+
+This removes launchd jobs for travel (08:00) and wizzair (08:00 / 13:00 when present), and sets
+`TRAVEL_AGENT_ENABLED=0` and `TRAVEL_EMAIL_ENABLED=0` in `.env` (plus wizzair flags in `wizzair/.env`
+when that directory exists). Manual `send` commands refuse to email until you run
+`./scripts/enable_agent.sh` and reinstall schedules.
+
 ## Configuration
 
 Environment variables (`.env` supported):
@@ -97,6 +110,8 @@ Environment variables (`.env` supported):
 | `TRAVEL_EMAIL_FROM` | `andalath@gmail.com` | Digest sender |
 | `TRAVEL_EMAIL_TO` | configured list | Comma-separated recipients |
 | `GMAIL_TOKEN_DIR` | `~/.config/gmail-agent` | Where gmail-agent stores OAuth tokens |
+| `TRAVEL_AGENT_ENABLED` | `1` | `0` skips launchd runs and blocks `send` |
+| `TRAVEL_EMAIL_ENABLED` | `1` | `0` blocks Gmail send (dry-run still works) |
 
 ## Project layout
 

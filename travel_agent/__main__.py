@@ -92,6 +92,11 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_send(args: argparse.Namespace) -> int:
     settings = get_settings()
+    if not settings.agent_enabled:
+        raise SystemExit(
+            "travel_agent is disabled (TRAVEL_AGENT_ENABLED=0). "
+            "Re-enable in .env or run scripts/enable_agent.sh"
+        )
     result = asyncio.run(
         run_agent(
             settings,
@@ -100,6 +105,7 @@ def cmd_send(args: argparse.Namespace) -> int:
         )
     )
     recipients = _normalize_recipients(args.recipients)
+    to_addrs = recipients or settings.email_to
     out = send_digest(
         settings,
         result,
@@ -107,7 +113,11 @@ def cmd_send(args: argparse.Namespace) -> int:
         recipients=recipients,
         dry_run=args.dry_run,
     )
-    print(f"Email HTML written to {out}")
+    if args.dry_run:
+        print(f"Dry run only — email NOT sent. Preview written to {out}")
+    else:
+        print(f"Email sent to: {', '.join(to_addrs)}")
+        print(f"Preview saved to: {out}")
     return 0
 
 
