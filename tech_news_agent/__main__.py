@@ -77,6 +77,11 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_send(args: argparse.Namespace) -> int:
     settings = get_settings()
+    if not settings.agent_enabled:
+        raise SystemExit(
+            "tech_news_agent is disabled (TECH_NEWS_AGENT_ENABLED=0). "
+            "Re-enable in .env or run scripts/enable_agent.sh"
+        )
     result = asyncio.run(
         run_agent(
             settings,

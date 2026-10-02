@@ -28,10 +28,19 @@ class Settings:
     email_from: str
     email_to: list[str]
     gmail_token_dir: str
+    agent_enabled: bool
+    email_enabled: bool
 
 
 def _split_emails(value: str) -> list[str]:
     return [part.strip() for part in value.split(",") if part.strip()]
+
+
+def _env_bool(name: str, default: bool = True) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
 
 
 def get_settings() -> Settings:
@@ -57,4 +66,6 @@ def get_settings() -> Settings:
         gmail_token_dir=os.path.expanduser(
             os.getenv("GMAIL_TOKEN_DIR", "~/.config/gmail-agent")
         ),
+        agent_enabled=_env_bool("TECH_NEWS_AGENT_ENABLED", True),
+        email_enabled=_env_bool("TECH_NEWS_EMAIL_ENABLED", True),
     )

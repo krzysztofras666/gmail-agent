@@ -4,6 +4,20 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+if [[ -f .env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
+case "${TECH_NEWS_AGENT_ENABLED:-1}" in
+  0|false|FALSE|no|NO|off|OFF)
+    echo "tech_news_agent disabled (TECH_NEWS_AGENT_ENABLED). Skipping scheduled run."
+    exit 0
+    ;;
+esac
+
 if [[ -f .venv/bin/activate ]]; then
   # shellcheck disable=SC1091
   source .venv/bin/activate
