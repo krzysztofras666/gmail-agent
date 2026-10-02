@@ -39,6 +39,12 @@ def send_digest(
     if dry_run:
         return out_path
 
+    if not settings.email_enabled:
+        raise RuntimeError(
+            "Outbound email is disabled (TECH_NEWS_EMAIL_ENABLED=0). "
+            "Use --dry-run to render a preview without sending."
+        )
+
     service = _gmail_service(settings, from_addr)
     message = MIMEMultipart("alternative")
     message["To"] = ", ".join(to_addrs)
